@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  CLIENT
+}
+
+enum AccessLevel {
+  VIEW
+  CREATE
+  MANAGE
+}
+
+enum Platform {
+  TWITTER
+  LINKEDIN
+  YOUTUBE
+  INSTAGRAM
+  SUBSTACK
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  clients Client[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  name           String?
+  hashedPassword String?
+  role           UserRole @default(MEMBER)
+  avatarUrl      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  teamAccess TeamAccess[]
+  posts      Post[]
+
+  @@index([organizationId])
+}
+
+model Client {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String
+  logoUrl   String?
+  color     String?  @default("#6366f1")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  socialAccounts SocialAccount[]
+  teamAccess     TeamAccess[]
+  posts          Post[]
+  invites        ClientInvite[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+}
+
+model SocialAccount {
+  id                String   @id @default(cuid())
+  platform          Platform
+  platformAccountId String
+  accountName       String
+  accountHandle     String?
+  avatarUrl         String?
+  accessToken       String
+  refreshToken      String?
+  tokenExpiresAt    DateTime?
+  scopes            String?
+  metadata          Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  postTargets PostTarget[]
+
+  @@unique([platform, platformAccountId])
+  @@index([clientId])
+}
+
+model TeamAccess {
+  id          String      @id @default(cuid())
+  accessLevel AccessLevel @default(VIEW)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientId])
+  @@index([userId])
+  @@index([clientId])
+}
+
+model ClientInvite {
+  id        String       @id @default(cuid())
+  email     String
+  token     String       @unique
+  status    InviteStatus @default(PENDING)
+  expiresAt DateTime
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([clientId])
+}
+
+model Post {
+  id          String     @id @default(cuid())
+  content     String
+  mediaUrls   String[]   @default([])
+  status      PostStatus @default(DRAFT)
+  scheduledAt DateTime?
+  publishedAt DateTime?
+  errorMsg    String?
+  retryCount  Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  clientId String
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  targets PostTarget[]
+
+  @@index([clientId])
+  @@index([authorId])
+  @@index([status, scheduledAt])
+}
+
+model PostTarget {
+  id             String     @id @default(cuid())
+  status         PostStatus @default(DRAFT)
+  platformPostId String?
+  errorMsg       String?
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  postId          String
+  post            Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  socialAccountId String
+  socialAccount   SocialAccount @relation(fields: [socialAccountId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([socialAccountId])
+}
