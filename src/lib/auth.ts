@@ -1,9 +1,9 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { db } from "./db";
+import { compare } from "bcryptjs";
+import { db } from "@/lib/db";
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
+export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
@@ -42,7 +42,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!user || !user.hashedPassword) return null;
 
-        const isValid = await bcrypt.compare(
+        const isValid = await compare(
           credentials.password as string,
           user.hashedPassword
         );

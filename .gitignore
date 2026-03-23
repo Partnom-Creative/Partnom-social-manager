@@ -1,15 +1,6 @@
 # dependencies
 /node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
+/.pnpm-store
 
 # next.js
 /.next/
@@ -41,7 +32,3 @@ next-env.d.ts
 
 # prisma
 src/generated/
-
-# caches
-.npm-cache/
-.pnpm-store/

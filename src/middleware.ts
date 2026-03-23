@@ -1,31 +1,22 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const publicPaths = ["/login", "/register", "/invite"];
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const publicPaths = ["/login", "/register", "/invite", "/api/auth", "/api/cron"];
+  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
 
-  const isPublic = publicPaths.some(
-    (p) => pathname === p || pathname.startsWith(p + "/")
-  );
+  if (isPublic) return NextResponse.next();
 
-  if (isPublic || pathname.startsWith("/api/auth")) {
-    return NextResponse.next();
-  }
+  const sessionToken =
+    req.cookies.get("authjs.session-token")?.value ||
+    req.cookies.get("__Secure-authjs.session-token")?.value;
 
-  const token =
-    request.cookies.get("authjs.session-token")?.value ||
-    request.cookies.get("__Secure-authjs.session-token")?.value;
-
-  if (!token && !pathname.startsWith("/api/")) {
-    const loginUrl = new URL("/login", request.url);
+  if (!sessionToken) {
+    const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (!token && pathname.startsWith("/api/")) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   return NextResponse.next();
