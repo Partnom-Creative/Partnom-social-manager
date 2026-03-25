@@ -25,6 +25,9 @@ yarn-error.log*
 # Filled copy for Vercel bulk import (never commit)
 vercel-import.env
 
+# Local DB debug script (never commit)
+test-auth.mts
+
 # vercel
 .vercel
 
