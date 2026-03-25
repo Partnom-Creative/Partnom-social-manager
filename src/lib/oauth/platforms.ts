@@ -1,4 +1,4 @@
-import { Platform } from "@/generated/prisma";
+import { Platform } from "@/generated/prisma/client";
 
 export type PlatformConfig = {
   name: string;

@@ -2,6 +2,7 @@ import { requireAuth } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { getAccessibleClientIds } from "@/lib/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,14 +33,6 @@ const PLATFORM_BADGE_CLASSES: Record<string, string> = {
   YOUTUBE: "bg-red-600 text-white border-red-600",
   INSTAGRAM: "bg-pink-600 text-white border-pink-600",
   SUBSTACK: "bg-orange-600 text-white border-orange-600",
-};
-
-const TARGET_STATUS_CLASSES: Record<string, string> = {
-  DRAFT: "text-slate-600",
-  SCHEDULED: "text-amber-600",
-  PUBLISHING: "text-blue-600",
-  PUBLISHED: "text-emerald-600",
-  FAILED: "text-red-600",
 };
 
 export default async function PostDetailPage({
@@ -99,12 +92,7 @@ export default async function PostDetailPage({
               {post.client.name}
             </h1>
             <div className="flex items-center gap-2 mt-1">
-              <Badge
-                variant="outline"
-                className={cn("text-xs", STATUS_BADGE_CLASSES[post.status])}
-              >
-                {post.status.charAt(0) + post.status.slice(1).toLowerCase()}
-              </Badge>
+              <StatusBadge status={post.status} />
               <span className="text-sm text-slate-500">
                 Created {format(new Date(post.createdAt), "MMM d, yyyy h:mm a")}
               </span>
@@ -184,15 +172,7 @@ export default async function PostDetailPage({
                         {target.socialAccount.accountName}
                       </span>
                     </div>
-                    <span
-                      className={cn(
-                        "text-xs font-medium",
-                        TARGET_STATUS_CLASSES[target.status]
-                      )}
-                    >
-                      {target.status.charAt(0) +
-                        target.status.slice(1).toLowerCase()}
-                    </span>
+                    <StatusBadge status={target.status} className="text-xs" />
                   </div>
 
                   {target.socialAccount.accountHandle && (

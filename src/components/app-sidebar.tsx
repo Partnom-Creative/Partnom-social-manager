@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   Sidebar,
@@ -20,21 +20,50 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LayoutDashboard, Users, Building2, PenSquare, Settings, LogOut, ChevronUp, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  LayoutDashboard,
+  Users,
+  Building2,
+  PenSquare,
+  Settings,
+  LogOut,
+  Calendar,
+  User,
+  CreditCard,
+  Bell,
+  MoreVertical,
+} from "lucide-react";
 
 type ClientItem = { id: string; name: string; slug: string; color: string | null };
 
+function twoLetterInitials(text: string) {
+  const parts = text.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase();
+  }
+  return text.slice(0, 2).toUpperCase();
+}
+
 export function AppSidebar({
   user,
+  organization,
   clients,
 }: {
-  user: { name: string | null; email: string; role: string };
+  user: {
+    name: string | null;
+    email: string;
+    role: string;
+    avatarUrl: string | null;
+  };
+  organization: { name: string; logoUrl: string | null };
   clients: ClientItem[];
 }) {
   const pathname = usePathname();
+  const router = useRouter();
 
   const mainNav = [
     { title: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -48,22 +77,44 @@ export function AppSidebar({
     { title: "Settings", href: "/settings", icon: Settings },
   ];
 
-  const initials = (user.name || user.email)
-    .split(" ")
+  const displayName = user.name || "Account";
+  const userInitials = (user.name || user.email)
+    .split(/\s+/)
+    .filter(Boolean)
     .map((n) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2);
 
+  const orgInitials = twoLetterInitials(organization.name);
+
   return (
-    <Sidebar>
-      <SidebarHeader className="border-b px-6 py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-            SH
-          </div>
-          <span className="font-semibold text-lg">Social Hub</span>
-        </Link>
+    <Sidebar variant="inset">
+      {/* pl-4 = group p-2 (8px) + menu button p-2 (8px) so logo lines up with nav icons */}
+      <SidebarHeader className="gap-2 py-4 pl-4 pr-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              render={<Link href="/" />}
+              size="lg"
+              className="gap-3 px-0 py-0 hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent data-active:bg-transparent data-active:font-semibold"
+            >
+              <Avatar className="h-8 w-8 shrink-0 rounded-lg">
+                {organization.logoUrl ? (
+                  <AvatarImage
+                    src={organization.logoUrl}
+                    alt=""
+                    className="object-cover"
+                  />
+                ) : null}
+                <AvatarFallback className="rounded-lg bg-sidebar-primary text-sidebar-primary-foreground text-sm font-bold">
+                  {orgInitials}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-semibold text-lg truncate">{organization.name}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
 
       <SidebarContent>
@@ -74,7 +125,7 @@ export function AppSidebar({
               {mainNav.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton render={<Link href={item.href} />} isActive={pathname === item.href}>
-                    <item.icon className="h-4 w-4" />
+                    <item.icon />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -120,7 +171,7 @@ export function AppSidebar({
                   {adminNav.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton render={<Link href={item.href} />} isActive={pathname === item.href}>
-                        <item.icon className="h-4 w-4" />
+                        <item.icon />
                         <span>{item.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -132,21 +183,78 @@ export function AppSidebar({
         )}
       </SidebarContent>
 
-      <SidebarFooter className="border-t">
+      <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger render={<SidebarMenuButton className="w-full" />}>
-                <Avatar className="h-6 w-6">
-                  <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
+                  />
+                }
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  {user.avatarUrl ? (
+                    <AvatarImage
+                      src={user.avatarUrl}
+                      alt=""
+                      className="object-cover"
+                    />
+                  ) : null}
+                  <AvatarFallback className="rounded-lg text-xs">{userInitials}</AvatarFallback>
                 </Avatar>
-                <span className="truncate">{user.name || user.email}</span>
-                <ChevronUp className="ml-auto h-4 w-4" />
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">{displayName}</span>
+                  <span className="truncate text-xs text-sidebar-foreground/70">{user.email}</span>
+                </div>
+                <MoreVertical className="ml-auto size-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign out
+              <DropdownMenuContent
+                className="w-(--anchor-width) min-w-56 rounded-lg"
+                side="top"
+                align="start"
+                sideOffset={4}
+              >
+                <div className="flex items-center gap-2 px-2 py-1.5 text-left text-sm">
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    {user.avatarUrl ? (
+                      <AvatarImage
+                        src={user.avatarUrl}
+                        alt=""
+                        className="object-cover"
+                      />
+                    ) : null}
+                    <AvatarFallback className="rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 text-xs font-medium text-white">
+                      {userInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">{displayName}</span>
+                    <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <User />
+                  Account
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <CreditCard />
+                  Billing
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push("/settings")}>
+                  <Bell />
+                  Notifications
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => signOut({ callbackUrl: "/login" })}
+                >
+                  <LogOut />
+                  Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

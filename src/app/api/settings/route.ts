@@ -6,6 +6,7 @@ import type { SessionUser } from "@/lib/auth-types";
 
 const updateOrgSchema = z.object({
   name: z.string().min(1, "Organization name is required").max(100),
+  logoUrl: z.string().max(2_000_000).nullable().optional(),
 });
 
 export async function GET() {
@@ -17,12 +18,27 @@ export async function GET() {
 
     const user = session.user as SessionUser;
 
-    const organization = await db.organization.findUnique({
-      where: { id: user.organizationId },
-      select: { id: true, name: true, slug: true },
-    });
+    const [dbUser, organization] = await Promise.all([
+      db.user.findUnique({
+        where: { id: user.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          avatarUrl: true,
+        },
+      }),
+      db.organization.findUnique({
+        where: { id: user.organizationId },
+        select: { id: true, name: true, slug: true, logoUrl: true },
+      }),
+    ]);
 
-    return NextResponse.json({ user, organization });
+    return NextResponse.json({
+      user: dbUser ?? { ...user, avatarUrl: null },
+      organization,
+    });
   } catch (error) {
     console.error("Error loading settings:", error);
     return NextResponse.json(
@@ -57,7 +73,10 @@ export async function PATCH(request: Request) {
 
     const organization = await db.organization.update({
       where: { id: user.organizationId },
-      data: { name: parsed.data.name },
+      data: {
+        name: parsed.data.name,
+        ...(parsed.data.logoUrl !== undefined && { logoUrl: parsed.data.logoUrl }),
+      },
     });
 
     return NextResponse.json(organization);

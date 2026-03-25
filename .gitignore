@@ -30,5 +30,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-src/generated/
+# Prisma: do not gitignore src/generated/ — Turbopack can fail to resolve @/generated/prisma/* if those files are ignored.
+# Run `pnpm exec prisma generate` after clone (also runs via postinstall).

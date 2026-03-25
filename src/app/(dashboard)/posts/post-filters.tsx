@@ -5,12 +5,14 @@ import { useCallback } from "react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DateRangePicker } from "@/components/ui/date-range-picker";
 
 type Client = {
   id: string;
@@ -18,12 +20,36 @@ type Client = {
   color: string | null;
 };
 
-const STATUSES = ["DRAFT", "SCHEDULED", "PUBLISHING", "PUBLISHED", "FAILED"];
+const STATUSES = ["DRAFT", "SCHEDULED", "PUBLISHING", "PUBLISHED", "FAILED"] as const;
+
+/** Sentinel for "no filter" — avoids `__all__` showing in the trigger. */
+const ALL = "all";
+
+const POST_STATUS_LABEL: Record<(typeof STATUSES)[number], string> = {
+  DRAFT: "Draft",
+  SCHEDULED: "Scheduled",
+  PUBLISHING: "Publishing",
+  PUBLISHED: "Published",
+  FAILED: "Failed",
+};
+
+function normalizeClientParam(raw: string | null) {
+  if (!raw || raw === "__all__") return ALL;
+  return raw;
+}
+
+function normalizeStatusParam(raw: string | null) {
+  if (!raw || raw === "__all__") return ALL;
+  return raw;
+}
 
 export function PostFilters({ clients }: { clients: Client[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+
+  const clientValue = normalizeClientParam(searchParams.get("client"));
+  const statusValue = normalizeStatusParam(searchParams.get("status"));
 
   const updateParams = useCallback(
     (updates: Record<string, string | null>) => {
@@ -39,74 +65,90 @@ export function PostFilters({ clients }: { clients: Client[] }) {
   );
 
   return (
-    <div className="flex flex-wrap items-end gap-3">
+    <div className="flex flex-wrap items-start gap-3">
       <div className="space-y-1">
-        <Label className="text-xs text-slate-500">Client</Label>
+        <Label className="text-xs text-muted-foreground">Client</Label>
         <Select
-          value={searchParams.get("client") || "__all__"}
+          value={clientValue}
           onValueChange={(v) =>
-            updateParams({ client: !v || v === "__all__" ? null : v })
+            updateParams({ client: !v || v === ALL ? null : v })
           }
         >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All clients" />
+          <SelectTrigger className="w-full max-w-[180px] border-border text-foreground">
+            <SelectValue placeholder="All clients">
+              {(value) =>
+                value === ALL
+                  ? "All clients"
+                  : clients.find((c) => c.id === value)?.name ?? "All clients"
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">All clients</SelectItem>
-            {clients.map((c) => (
-              <SelectItem key={c.id} value={c.id}>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-2 w-2 rounded-full"
-                    style={{ backgroundColor: c.color || "#6366f1" }}
-                  />
-                  {c.name}
-                </div>
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>Clients</SelectLabel>
+              <SelectItem value={ALL}>All clients</SelectItem>
+              {clients.map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="h-2 w-2 rounded-full"
+                      style={{ backgroundColor: c.color || "#6366f1" }}
+                    />
+                    {c.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
 
       <div className="space-y-1">
-        <Label className="text-xs text-slate-500">Status</Label>
+        <Label className="text-xs text-muted-foreground">Status</Label>
         <Select
-          value={searchParams.get("status") || "__all__"}
+          value={statusValue}
           onValueChange={(v) =>
-            updateParams({ status: !v || v === "__all__" ? null : v })
+            updateParams({ status: !v || v === ALL ? null : v })
           }
         >
-          <SelectTrigger className="w-[160px]">
-            <SelectValue placeholder="All statuses" />
+          <SelectTrigger className="w-full max-w-[160px] border-border text-foreground">
+            <SelectValue placeholder="All statuses">
+              {(value) =>
+                value === ALL
+                  ? "All statuses"
+                  : POST_STATUS_LABEL[value as keyof typeof POST_STATUS_LABEL] ??
+                    String(value)
+              }
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="__all__">All statuses</SelectItem>
-            {STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s.charAt(0) + s.slice(1).toLowerCase()}
-              </SelectItem>
-            ))}
+            <SelectGroup>
+              <SelectLabel>Status</SelectLabel>
+              <SelectItem value={ALL}>All statuses</SelectItem>
+              {STATUSES.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {POST_STATUS_LABEL[s]}
+                </SelectItem>
+              ))}
+            </SelectGroup>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs text-slate-500">From</Label>
-        <Input
-          type="date"
-          value={searchParams.get("from") || ""}
-          onChange={(e) => updateParams({ from: e.target.value || null })}
-          className="w-[160px]"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <Label className="text-xs text-slate-500">To</Label>
-        <Input
-          type="date"
-          value={searchParams.get("to") || ""}
-          onChange={(e) => updateParams({ to: e.target.value || null })}
-          className="w-[160px]"
+      <div className="space-y-1 w-[min(100%,18rem)]">
+        <Label
+          htmlFor="posts-scheduled-range"
+          className="text-xs text-muted-foreground"
+        >
+          Scheduled
+        </Label>
+        <DateRangePicker
+          id="posts-scheduled-range"
+          from={searchParams.get("from") || ""}
+          to={searchParams.get("to") || ""}
+          onRangeChange={(from, to) => updateParams({ from, to })}
+          placeholder="Pick a date range"
+          className="w-full"
         />
       </div>
     </div>

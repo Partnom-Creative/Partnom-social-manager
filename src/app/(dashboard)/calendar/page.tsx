@@ -1,70 +1,70 @@
 import { requireAuth } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { getAccessibleClientIds } from "@/lib/permissions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
+import { Card, CardContent } from "@/components/ui/card";
+import type { PostCalendarPost } from "@/components/post-calendar";
+import { CalendarScheduledView } from "./calendar-scheduled-view";
 
 export default async function CalendarPage() {
   const user = await requireAuth();
   const clientIds = await getAccessibleClientIds(user.id, user.organizationId, user.role);
 
-  const scheduledPosts = await db.post.findMany({
-    where: {
-      clientId: { in: clientIds },
-      status: "SCHEDULED",
-      scheduledAt: { not: null },
+  const [calendarPostsRaw, clients] = await Promise.all([
+    db.post.findMany({
+      where: {
+        clientId: { in: clientIds },
+        scheduledAt: { not: null },
+      },
+      select: {
+        id: true,
+        content: true,
+        status: true,
+        scheduledAt: true,
+        client: { select: { id: true, name: true, color: true } },
+        targets: {
+          select: { socialAccount: { select: { platform: true } } },
+        },
+      },
+      orderBy: { scheduledAt: "asc" },
+      take: 200,
+    }),
+    db.client.findMany({
+      where: { organizationId: user.organizationId, id: { in: clientIds } },
+      select: { id: true, name: true, color: true },
+      orderBy: { name: "asc" },
+    }),
+  ]);
+
+  const calendarPosts: PostCalendarPost[] = calendarPostsRaw.map((p) => ({
+    id: p.id,
+    content: p.content,
+    status: p.status,
+    scheduledAt: p.scheduledAt?.toISOString() ?? null,
+    client: {
+      id: p.client.id,
+      name: p.client.name,
+      color: p.client.color,
     },
-    include: {
-      client: { select: { name: true, color: true } },
-      targets: { include: { socialAccount: { select: { platform: true, accountName: true } } } },
-    },
-    orderBy: { scheduledAt: "asc" },
-    take: 50,
-  });
+    targets: p.targets.map((t) => ({
+      socialAccount: { platform: t.socialAccount.platform },
+    })),
+  }));
 
   return (
-    <div className="space-y-8">
-      <div>
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="shrink-0">
         <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
-        <p className="text-muted-foreground mt-1">Scheduled posts timeline</p>
+        <p className="text-muted-foreground mt-1">Scheduled posts by day</p>
       </div>
 
-      {scheduledPosts.length === 0 ? (
+      {clients.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground">No scheduled posts. Create a post and schedule it for later.</p>
+            <p className="text-muted-foreground">No clients yet. Add a client to schedule posts.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {scheduledPosts.map((post) => (
-            <Card key={post.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="h-3 w-3 rounded-full shrink-0"
-                    style={{ backgroundColor: post.client.color || "#6366f1" }}
-                  />
-                  <CardTitle className="text-base">{post.client.name}</CardTitle>
-                  <Badge variant="secondary" className="ml-auto">
-                    {post.scheduledAt ? format(new Date(post.scheduledAt), "MMM d, yyyy h:mm a") : ""}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm line-clamp-2">{post.content}</p>
-                <div className="flex gap-1.5 mt-2">
-                  {post.targets.map((t) => (
-                    <Badge key={t.id} variant="outline" className="text-xs">
-                      {t.socialAccount.platform.toLowerCase()}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <CalendarScheduledView posts={calendarPosts} clients={clients} />
       )}
     </div>
   );

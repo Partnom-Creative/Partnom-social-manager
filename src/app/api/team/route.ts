@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { hash } from "bcryptjs";
+import { getPublicBaseUrl } from "@/lib/public-base-url";
+import { sendTeamInviteEmail } from "@/lib/team-invite-email";
+import { InviteStatus, UserRole } from "@/generated/prisma/client";
 
 export async function GET() {
   const session = await auth();
@@ -27,32 +30,76 @@ export async function GET() {
   return NextResponse.json(members);
 }
 
+/** Create a team invite (email with link to set password). */
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const user = session.user as any;
-  if (user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const admin = session.user as any;
+  if (admin.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  const { name, email, password, role } = await req.json();
-  if (!name || !email || !password) {
-    return NextResponse.json({ error: "Name, email, and password are required" }, { status: 400 });
+  const { email, role } = await req.json();
+  if (!email || typeof email !== "string") {
+    return NextResponse.json({ error: "Email is required" }, { status: 400 });
   }
 
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "Email already in use" }, { status: 409 });
+  const inviteRole =
+    role === "ADMIN" ? UserRole.ADMIN : role === "EDITOR" ? UserRole.EDITOR : null;
+  if (!inviteRole) {
+    return NextResponse.json({ error: "Role must be ADMIN or EDITOR" }, { status: 400 });
   }
 
-  const hashedPassword = await hash(password, 12);
-  const member = await db.user.create({
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const existingUser = await db.user.findUnique({ where: { email: normalizedEmail } });
+  if (existingUser) {
+    return NextResponse.json({ error: "A user with this email already exists" }, { status: 409 });
+  }
+
+  const pending = await db.teamInvite.findFirst({
+    where: {
+      organizationId: admin.organizationId,
+      email: normalizedEmail,
+      status: InviteStatus.PENDING,
+    },
+  });
+  if (pending) {
+    return NextResponse.json({ error: "An invitation is already pending for this email" }, { status: 409 });
+  }
+
+  const org = await db.organization.findUnique({
+    where: { id: admin.organizationId },
+    select: { name: true },
+  });
+  if (!org) return NextResponse.json({ error: "Organization not found" }, { status: 404 });
+
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const invite = await db.teamInvite.create({
     data: {
-      name,
-      email,
-      hashedPassword,
-      role: role === "ADMIN" ? "ADMIN" : "MEMBER",
-      organizationId: user.organizationId,
+      email: normalizedEmail,
+      token,
+      expiresAt,
+      organizationId: admin.organizationId,
+      role: inviteRole,
     },
   });
 
-  return NextResponse.json({ id: member.id, name: member.name, email: member.email, role: member.role }, { status: 201 });
+  const inviteUrl = `${getPublicBaseUrl()}/team/join/${token}`;
+
+  const sendResult = await sendTeamInviteEmail({
+    to: normalizedEmail,
+    organizationName: org.name,
+    inviteUrl,
+  });
+
+  if (!sendResult.ok) {
+    await db.teamInvite.delete({ where: { id: invite.id } });
+    return NextResponse.json(
+      { error: "Could not send invite email. Check RESEND_API_KEY." },
+      { status: 502 }
+    );
+  }
+
+  return NextResponse.json({ id: invite.id, email: invite.email, role: invite.role }, { status: 201 });
 }

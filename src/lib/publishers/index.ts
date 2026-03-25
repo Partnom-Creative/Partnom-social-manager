@@ -1,4 +1,4 @@
-import { Platform } from "@/generated/prisma";
+import { Platform } from "@/generated/prisma/client";
 import { PublishResult, PublishInput } from "./base";
 import { publishToTwitter } from "./twitter";
 import { publishToLinkedIn } from "./linkedin";

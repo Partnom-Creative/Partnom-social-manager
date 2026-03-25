@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CalendarPicker } from "@/components/ui/calendar-picker";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,9 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -108,7 +110,7 @@ export function CreatePostButton({ clients }: { clients: ClientWithAccounts[] })
 
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-      <DialogTrigger render={<Button />}>
+      <DialogTrigger render={<Button variant="brand" />}>
         <Plus className="mr-2 h-4 w-4" />
         New Post
       </DialogTrigger>
@@ -122,18 +124,21 @@ export function CreatePostButton({ clients }: { clients: ClientWithAccounts[] })
           <div className="space-y-2">
             <Label>Client</Label>
             <Select value={clientId} onValueChange={(v) => { setClientId(v ?? ""); setSelectedAccounts([]); }}>
-              <SelectTrigger>
+              <SelectTrigger className="w-full max-w-48">
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: c.color || "#6366f1" }} />
-                      {c.name}
-                    </div>
-                  </SelectItem>
-                ))}
+                <SelectGroup>
+                  <SelectLabel>Clients</SelectLabel>
+                  {clients.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 rounded-full" style={{ backgroundColor: c.color || "#6366f1" }} />
+                        {c.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>
@@ -199,8 +204,7 @@ export function CreatePostButton({ clients }: { clients: ClientWithAccounts[] })
             {!publishNow && (
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground">Schedule for later</Label>
-                <Input
-                  type="datetime-local"
+                <CalendarPicker
                   value={scheduledAt}
                   onChange={(e) => setScheduledAt(e.target.value)}
                   min={new Date().toISOString().slice(0, 16)}

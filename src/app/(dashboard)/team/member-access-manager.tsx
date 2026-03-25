@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -83,7 +85,7 @@ export function MemberAccessManager({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Client Access</p>
+      <p className="text-xs font-medium text-muted-foreground tracking-wider">Client Access</p>
 
       {currentAccess.length === 0 && (
         <p className="text-sm text-muted-foreground">No client access assigned</p>
@@ -102,9 +104,12 @@ export function MemberAccessManager({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="VIEW">View</SelectItem>
-                <SelectItem value="CREATE">Create</SelectItem>
-                <SelectItem value="MANAGE">Manage</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Access</SelectLabel>
+                  <SelectItem value="VIEW">View</SelectItem>
+                  <SelectItem value="CREATE">Create</SelectItem>
+                  <SelectItem value="MANAGE">Manage</SelectItem>
+                </SelectGroup>
               </SelectContent>
             </Select>
             <button
@@ -129,9 +134,12 @@ export function MemberAccessManager({
               <SelectValue placeholder="Add client access..." />
             </SelectTrigger>
             <SelectContent>
-              {unassignedClients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel>Clients</SelectLabel>
+                {unassignedClients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
           <Button size="sm" variant="outline" onClick={addAccess} disabled={!addingClient}>

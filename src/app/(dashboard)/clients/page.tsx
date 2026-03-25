@@ -4,7 +4,7 @@ import { getAccessibleClientIds } from "@/lib/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Plus, Share2 } from "lucide-react";
+import { ClientCardSeparatorMenu } from "@/components/ui/separator-menu";
 import Link from "next/link";
 import { CreateClientDialog } from "./create-client-dialog";
 
@@ -56,14 +56,11 @@ export default async function ClientsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Share2 className="h-3.5 w-3.5" />
-                      {client.socialAccounts.length} accounts
-                    </span>
-                    <span>{client._count.posts} posts</span>
-                    <span>{client._count.teamAccess} members</span>
-                  </div>
+                  <ClientCardSeparatorMenu
+                    accounts={client.socialAccounts.length}
+                    posts={client._count.posts}
+                    members={client._count.teamAccess}
+                  />
                   {client.socialAccounts.length > 0 && (
                     <div className="flex gap-1.5 mt-3">
                       {[...new Set(client.socialAccounts.map((a) => a.platform))].map((p) => (

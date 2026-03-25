@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { AccessLevel, UserRole } from "@/generated/prisma";
+import { AccessLevel, UserRole } from "@/generated/prisma/client";
 
 export type SessionUser = {
   id: string;
@@ -22,6 +22,7 @@ export async function getAccessibleClientIds(userId: string, orgId: string, role
     return clients.map((c) => c.id);
   }
 
+  // EDITOR and MEMBER: client access via TeamAccess
   const access = await db.teamAccess.findMany({
     where: { userId },
     select: { clientId: true },

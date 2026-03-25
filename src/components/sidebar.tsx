@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatRoleLabel } from "@/lib/format-role";
 
 type SidebarProps = {
   user: {
@@ -87,7 +88,7 @@ export function Sidebar({ user, organization, clients }: SidebarProps) {
       {/* Clients section */}
       <div className="mt-6 flex-1 overflow-y-auto px-3">
         <div className="flex items-center justify-between px-3 pb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          <span className="text-xs font-semibold tracking-wider text-slate-400">
             Clients
           </span>
           {user.role === "ADMIN" && (
@@ -157,7 +158,7 @@ export function Sidebar({ user, organization, clients }: SidebarProps) {
                 variant="secondary"
                 className="h-4 px-1.5 text-[10px] leading-none bg-slate-700 text-slate-300 border-0"
               >
-                {user.role}
+                {formatRoleLabel(user.role)}
               </Badge>
             </div>
           </div>

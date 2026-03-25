@@ -11,7 +11,9 @@ import { CalendarPicker } from "@/components/ui/calendar-picker";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
@@ -233,21 +235,24 @@ export function PostComposer({
             onValueChange={(v) => v && handleClientChange(v)}
             disabled={isEditing}
           >
-            <SelectTrigger>
+            <SelectTrigger className="w-full max-w-48">
               <SelectValue placeholder="Select a client" />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-3 w-3 rounded-full"
-                      style={{ backgroundColor: c.color || "#6366f1" }}
-                    />
-                    {c.name}
-                  </div>
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel>Clients</SelectLabel>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-3 w-3 rounded-full"
+                        style={{ backgroundColor: c.color || "#6366f1" }}
+                      />
+                      {c.name}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
             </SelectContent>
           </Select>
         </div>

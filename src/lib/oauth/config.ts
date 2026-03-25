@@ -1,3 +1,5 @@
+import { getPublicBaseUrl } from "@/lib/public-base-url";
+
 export type OAuthPlatformConfig = {
   clientId: string;
   clientSecret: string;
@@ -46,6 +48,5 @@ export const platformConfig: Record<string, OAuthPlatformConfig> = {
 };
 
 export function getRedirectUri(platform: string): string {
-  const baseUrl = process.env.AUTH_URL || "http://localhost:3000";
-  return `${baseUrl}/api/oauth/${platform}/callback`;
+  return `${getPublicBaseUrl()}/api/oauth/${platform}/callback`;
 }

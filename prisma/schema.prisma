@@ -9,6 +9,7 @@ datasource db {
 
 enum UserRole {
   ADMIN
+  EDITOR
   MEMBER
   CLIENT
 }
@@ -45,11 +46,13 @@ model Organization {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
+  logoUrl   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   users   User[]
   clients Client[]
+  teamInvites TeamInvite[]
 }
 
 model User {
@@ -146,6 +149,23 @@ model ClientInvite {
 
   @@index([token])
   @@index([clientId])
+}
+
+model TeamInvite {
+  id        String       @id @default(cuid())
+  email     String
+  token     String       @unique
+  status    InviteStatus @default(PENDING)
+  expiresAt DateTime
+  role      UserRole     @default(EDITOR)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([organizationId])
 }
 
 model Post {

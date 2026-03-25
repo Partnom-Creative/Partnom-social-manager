@@ -2,14 +2,18 @@ import { requireAuth } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { getUserAccessLevel } from "@/lib/permissions";
 import { notFound, redirect } from "next/navigation";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { StatusBadge } from "@/components/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Share2, PenSquare, Users, Mail, ExternalLink } from "lucide-react";
+import { Share2, PenSquare, Mail, CalendarDays } from "lucide-react";
 import Link from "next/link";
 import { SendInviteDialog } from "./send-invite-dialog";
+import { InviteRowActions } from "./invite-row-actions";
+import { ClientScheduledCalendar } from "./client-scheduled-calendar";
 import { format } from "date-fns";
+import type { PostCalendarPost } from "@/components/post-calendar";
 
 const platformIcons: Record<string, string> = {
   TWITTER: "𝕏",
@@ -50,6 +54,40 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
 
   const canManage = accessLevel === "MANAGE";
 
+  const calendarPostsRaw = await db.post.findMany({
+    where: {
+      clientId: client.id,
+      scheduledAt: { not: null },
+    },
+    select: {
+      id: true,
+      content: true,
+      status: true,
+      scheduledAt: true,
+      client: { select: { id: true, name: true, color: true } },
+      targets: {
+        select: { socialAccount: { select: { platform: true } } },
+      },
+    },
+    orderBy: { scheduledAt: "asc" },
+    take: 200,
+  });
+
+  const calendarPosts: PostCalendarPost[] = calendarPostsRaw.map((p) => ({
+    id: p.id,
+    content: p.content,
+    status: p.status,
+    scheduledAt: p.scheduledAt?.toISOString() ?? null,
+    client: {
+      id: p.client.id,
+      name: p.client.name,
+      color: p.client.color,
+    },
+    targets: p.targets.map((t) => ({
+      socialAccount: { platform: t.socialAccount.platform },
+    })),
+  }));
+
   return (
     <div className="space-y-8">
       <div className="flex items-center gap-4">
@@ -82,6 +120,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
             <PenSquare className="mr-1.5 h-4 w-4" />
             Posts
           </TabsTrigger>
+          <TabsTrigger value="calendar">
+            <CalendarDays className="mr-1.5 h-4 w-4" />
+            Calendar
+          </TabsTrigger>
           <TabsTrigger value="invites">
             <Mail className="mr-1.5 h-4 w-4" />
             Invites
@@ -100,8 +142,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {client.socialAccounts.map((account) => (
-                <Card key={account.id}>
-                  <CardContent className="flex items-center gap-3 py-4">
+                <Card key={account.id} className="!gap-0 !p-0">
+                  <CardContent className="flex items-center gap-3 !px-4 !py-4">
                     <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center text-lg">
                       {platformIcons[account.platform] || "?"}
                     </div>
@@ -133,17 +175,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
           ) : (
             <div className="space-y-3">
               {client.posts.map((post) => (
-                <Card key={post.id}>
-                  <CardContent className="py-4">
+                <Card key={post.id} className="!gap-0 !p-0">
+                  <CardContent className="!px-4 !py-4">
                     <p className="text-sm line-clamp-2">{post.content}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                      <Badge variant={
-                        post.status === "PUBLISHED" ? "default" :
-                        post.status === "SCHEDULED" ? "secondary" :
-                        post.status === "FAILED" ? "destructive" : "outline"
-                      } className="text-xs">
-                        {post.status.toLowerCase()}
-                      </Badge>
+                      <StatusBadge status={post.status} className="text-xs" />
                       <span>by {post.author.name}</span>
                       <span>{format(new Date(post.createdAt), "MMM d, yyyy")}</span>
                     </div>
@@ -152,6 +188,10 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
               ))}
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="calendar" className="space-y-4">
+          <ClientScheduledCalendar posts={calendarPosts} clientId={client.id} />
         </TabsContent>
 
         <TabsContent value="invites" className="space-y-4">
@@ -165,20 +205,24 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ s
           ) : (
             <div className="space-y-3">
               {client.invites.map((invite) => (
-                <Card key={invite.id}>
-                  <CardContent className="flex items-center gap-3 py-4">
-                    <div className="flex-1">
-                      <p className="font-medium">{invite.email}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Sent {format(new Date(invite.createdAt), "MMM d, yyyy")} &middot; Expires {format(new Date(invite.expiresAt), "MMM d, yyyy")}
+                <Card key={invite.id} className="!gap-0 !p-0">
+                  <CardContent className="flex items-center gap-3 !px-4 !py-4">
+                    <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <p className="font-medium leading-tight">
+                        {invite.email}
+                      </p>
+                      <p className="text-xs leading-tight text-muted-foreground">
+                        Sent {format(new Date(invite.createdAt), "MMM d, yyyy")}{" "}
+                        &middot; Expires{" "}
+                        {format(new Date(invite.expiresAt), "MMM d, yyyy")}
                       </p>
                     </div>
-                    <Badge variant={
-                      invite.status === "ACCEPTED" ? "default" :
-                      invite.status === "EXPIRED" ? "destructive" : "secondary"
-                    }>
-                      {invite.status.toLowerCase()}
-                    </Badge>
+                    <div className="flex shrink-0 items-center gap-1">
+                      <StatusBadge status={invite.status} className="text-xs" />
+                      {canManage && (
+                        <InviteRowActions inviteId={invite.id} status={invite.status} />
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               ))}

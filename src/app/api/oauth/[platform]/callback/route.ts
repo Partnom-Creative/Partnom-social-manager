@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { db } from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/encryption";
 import { platformConfig } from "@/lib/oauth/config";
-import { Platform } from "@/generated/prisma";
+import { getPublicBaseUrl } from "@/lib/public-base-url";
+import { Platform } from "@/generated/prisma/client";
 import * as twitter from "@/lib/oauth/twitter";
 import * as linkedin from "@/lib/oauth/linkedin";
 import * as youtube from "@/lib/oauth/youtube";
@@ -131,7 +132,7 @@ export async function GET(
   const stateParam = searchParams.get("state");
   const error = searchParams.get("error");
 
-  const baseUrl = process.env.AUTH_URL || "http://localhost:3000";
+  const baseUrl = getPublicBaseUrl();
 
   if (error || !code || !stateParam) {
     return NextResponse.redirect(

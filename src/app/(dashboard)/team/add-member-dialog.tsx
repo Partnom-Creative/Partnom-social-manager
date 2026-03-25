@@ -17,37 +17,40 @@ import {
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { formatRoleLabel } from "@/lib/format-role";
 
 export function AddMemberDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", role: "MEMBER" });
+  const [form, setForm] = useState({ email: "", role: "EDITOR" as "ADMIN" | "EDITOR" });
 
   async function onSubmit() {
-    if (!form.name || !form.email || !form.password) return;
+    if (!form.email.trim()) return;
     setLoading(true);
 
     const res = await fetch("/api/team", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ email: form.email.trim(), role: form.role }),
     });
 
     if (res.ok) {
-      toast.success("Team member added");
+      toast.success("Invitation sent — they can set their password from the email");
       setOpen(false);
-      setForm({ name: "", email: "", password: "", role: "MEMBER" });
+      setForm({ email: "", role: "EDITOR" });
       router.refresh();
     } else {
       const data = await res.json();
-      toast.error(data.error || "Failed to add member");
+      toast.error(data.error || "Failed to send invite");
     }
     setLoading(false);
   }
@@ -60,40 +63,51 @@ export function AddMemberDialog() {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Team Member</DialogTitle>
-          <DialogDescription>Add a new member to your team. You can assign client access after creation.</DialogDescription>
+          <DialogTitle>Invite team member</DialogTitle>
+          <DialogDescription>
+            We&apos;ll email them a link to create their password and join your organization.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Name</Label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Jane Doe" />
-          </div>
-          <div className="space-y-2">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} placeholder="jane@agency.com" />
-          </div>
-          <div className="space-y-2">
-            <Label>Temporary Password</Label>
-            <Input type="password" value={form.password} onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))} placeholder="Min. 8 characters" />
+            <Label htmlFor="invite-email">Email</Label>
+            <Input
+              id="invite-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="teammate@agency.com"
+              autoComplete="email"
+            />
           </div>
           <div className="space-y-2">
             <Label>Role</Label>
-            <Select value={form.role} onValueChange={(v) => setForm((f) => ({ ...f, role: v ?? "MEMBER" }))}>
-              <SelectTrigger>
-                <SelectValue />
+            <Select
+              value={form.role}
+              onValueChange={(v) => setForm((f) => ({ ...f, role: (v as "ADMIN" | "EDITOR") ?? "EDITOR" }))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Role">
+                  {(value: string | null) => (value ? formatRoleLabel(value) : "Role")}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="MEMBER">Member</SelectItem>
-                <SelectItem value="ADMIN">Admin</SelectItem>
+                <SelectGroup>
+                  <SelectLabel>Role</SelectLabel>
+                  <SelectItem value="EDITOR">Editor</SelectItem>
+                  <SelectItem value="ADMIN">Admin</SelectItem>
+                </SelectGroup>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={onSubmit} disabled={loading || !form.name || !form.email || !form.password}>
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => void onSubmit()} disabled={loading || !form.email.trim()}>
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Add Member
+            Send invite
           </Button>
         </DialogFooter>
       </DialogContent>

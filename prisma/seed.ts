@@ -1,11 +1,14 @@
-import { PrismaClient } from "../src/generated/prisma";
+import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
+import { normalizePgConnectionString } from "../src/lib/normalize-pg-connection-string";
 
 dotenv.config();
 
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const adapter = new PrismaPg({
+  connectionString: normalizePgConnectionString(process.env.DATABASE_URL!),
+});
 const prisma = new PrismaClient({ adapter });
 
 async function main() {

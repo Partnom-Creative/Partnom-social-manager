@@ -8,6 +8,7 @@ import type { SessionUser } from "@/lib/auth-types";
 const updateProfileSchema = z
   .object({
     name: z.string().min(1, "Name is required").max(100),
+    avatarUrl: z.string().max(2_000_000).nullable().optional(),
     currentPassword: z.string().optional(),
     newPassword: z.string().min(8, "Password must be at least 8 characters").optional(),
   })
@@ -38,7 +39,14 @@ export async function PATCH(request: Request) {
       );
     }
 
-    const { name, currentPassword, newPassword } = parsed.data;
+    const { name, currentPassword, newPassword, avatarUrl } = parsed.data;
+
+    const baseData: { name: string; avatarUrl?: string | null; hashedPassword?: string } = {
+      name,
+    };
+    if (avatarUrl !== undefined) {
+      baseData.avatarUrl = avatarUrl;
+    }
 
     if (currentPassword && newPassword) {
       const dbUser = await db.user.findUnique({
@@ -64,12 +72,12 @@ export async function PATCH(request: Request) {
       const hashedPassword = await bcrypt.hash(newPassword, 12);
       await db.user.update({
         where: { id: user.id },
-        data: { name, hashedPassword },
+        data: { ...baseData, hashedPassword },
       });
     } else {
       await db.user.update({
         where: { id: user.id },
-        data: { name },
+        data: baseData,
       });
     }
 

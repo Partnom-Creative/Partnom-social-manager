@@ -66,7 +66,7 @@ export default async function InvitePage({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
               <Share2 className="h-6 w-6" />
             </div>
-            <p className="text-sm font-medium text-indigo-600 tracking-wide uppercase">
+            <p className="text-sm font-medium text-indigo-600 tracking-wide">
               SocialHub
             </p>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -14,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Building2, User, Key, Loader2, CheckCircle2 } from "lucide-react";
+import { IdentityAvatarField } from "@/components/identity-avatar-field";
 
 type SessionUser = {
   id: string;
@@ -21,25 +23,30 @@ type SessionUser = {
   name: string | null;
   role: "ADMIN" | "MEMBER" | "CLIENT";
   organizationId: string;
+  avatarUrl: string | null;
 };
 
 type Organization = {
   id: string;
   name: string;
   slug: string;
+  logoUrl: string | null;
 };
 
 export default function SettingsPage() {
+  const router = useRouter();
   const [user, setUser] = useState<SessionUser | null>(null);
   const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [orgName, setOrgName] = useState("");
+  const [orgLogoUrl, setOrgLogoUrl] = useState<string | null>(null);
   const [orgSaving, setOrgSaving] = useState(false);
   const [orgSuccess, setOrgSuccess] = useState(false);
   const [orgError, setOrgError] = useState("");
 
   const [profileName, setProfileName] = useState("");
+  const [profileAvatarUrl, setProfileAvatarUrl] = useState<string | null>(null);
   const [profileEmail, setProfileEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -56,7 +63,9 @@ export default function SettingsPage() {
         setUser(data.user);
         setOrg(data.organization);
         setOrgName(data.organization?.name ?? "");
+        setOrgLogoUrl(data.organization?.logoUrl ?? null);
         setProfileName(data.user?.name ?? "");
+        setProfileAvatarUrl(data.user?.avatarUrl ?? null);
         setProfileEmail(data.user?.email ?? "");
       } catch {
         setOrgError("Failed to load settings");
@@ -77,13 +86,14 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: orgName }),
+        body: JSON.stringify({ name: orgName, logoUrl: orgLogoUrl }),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to save");
       }
       setOrgSuccess(true);
+      router.refresh();
       setTimeout(() => setOrgSuccess(false), 3000);
     } catch (err: any) {
       setOrgError(err.message);
@@ -97,7 +107,10 @@ export default function SettingsPage() {
     setProfileError("");
     setProfileSuccess(false);
     try {
-      const body: Record<string, string> = { name: profileName };
+      const body: Record<string, string | null> = {
+        name: profileName,
+        avatarUrl: profileAvatarUrl,
+      };
       if (currentPassword && newPassword) {
         body.currentPassword = currentPassword;
         body.newPassword = newPassword;
@@ -114,6 +127,7 @@ export default function SettingsPage() {
       setProfileSuccess(true);
       setCurrentPassword("");
       setNewPassword("");
+      router.refresh();
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: any) {
       setProfileError(err.message);
@@ -170,6 +184,16 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
+                  <Label>Workspace logo</Label>
+                  <IdentityAvatarField
+                    value={orgLogoUrl}
+                    onChange={setOrgLogoUrl}
+                    fallbackFrom={orgName || "Org"}
+                    size="lg"
+                    variant="square"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="org-name">Organization Name</Label>
                   <Input
                     id="org-name"
@@ -177,6 +201,9 @@ export default function SettingsPage() {
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Your organization name"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Shown next to your logo in the sidebar header.
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label>Slug</Label>
@@ -217,6 +244,16 @@ export default function SettingsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Profile photo</Label>
+                <IdentityAvatarField
+                  value={profileAvatarUrl}
+                  onChange={setProfileAvatarUrl}
+                  fallbackFrom={profileName || profileEmail || "?"}
+                  size="lg"
+                  variant="rounded"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="profile-name">Name</Label>
                 <Input

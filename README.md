@@ -45,7 +45,7 @@ cp .env.example .env
 
 Edit `.env` with your database URL and other settings. At minimum you need:
 
-- `DATABASE_URL` — PostgreSQL connection string
+- `DATABASE_URL` — PostgreSQL connection string (for hosted TLS DBs, use `sslmode=verify-full` in the URL query string to avoid noisy `pg` SSL deprecation warnings in dev)
 - `NEXTAUTH_SECRET` — Generate with `openssl rand -base64 32`
 - `ENCRYPTION_KEY` — Generate with `openssl rand -hex 32`
 
@@ -82,13 +82,11 @@ https://your-domain.com/api/oauth/{platform}/callback
 
 ### Deployment
 
-Deploy to Vercel:
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for GitHub → Vercel → domain → OAuth → app review (step-by-step).
 
-```bash
-vercel
-```
+Quick start: push to GitHub, import the repo on Vercel, set `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `NEXTAUTH_URL` (same as `AUTH_URL` in production), `ENCRYPTION_KEY`, `CRON_SECRET`, and use **Build Command** `pnpm run build:with-migrate`.
 
-The `vercel.json` includes a cron job that runs every minute to publish scheduled posts. Make sure to set the `CRON_SECRET` environment variable in production.
+The [`vercel.json`](vercel.json) cron hits `/api/cron/publish` every minute; set `CRON_SECRET` in production.
 
 ## Project Structure
 

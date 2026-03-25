@@ -2,7 +2,6 @@ import { requireAuth } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { getAccessibleClientIds } from "@/lib/permissions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, Users, PenSquare, Share2 } from "lucide-react";
 
 export default async function DashboardPage() {
   const user = await requireAuth();
@@ -25,10 +24,10 @@ export default async function DashboardPage() {
   });
 
   const stats = [
-    { title: "Clients", value: clientCount, icon: Building2 },
-    { title: "Social Accounts", value: accountCount, icon: Share2 },
-    { title: "Total Posts", value: postCount, icon: PenSquare },
-    ...(user.role === "ADMIN" ? [{ title: "Team Members", value: teamCount, icon: Users }] : []),
+    { title: "Clients", value: clientCount },
+    { title: "Social Accounts", value: accountCount },
+    { title: "Total Posts", value: postCount },
+    ...(user.role === "ADMIN" ? [{ title: "Team Members", value: teamCount }] : []),
   ];
 
   return (
@@ -43,9 +42,8 @@ export default async function DashboardPage() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{stat.value}</div>

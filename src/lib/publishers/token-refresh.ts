@@ -1,4 +1,4 @@
-import { SocialAccount, Platform } from "@/generated/prisma";
+import { SocialAccount, Platform } from "@/generated/prisma/client";
 import { db } from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/encryption";
 import { platformConfig } from "@/lib/oauth/config";

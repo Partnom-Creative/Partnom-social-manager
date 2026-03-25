@@ -1,35 +1,55 @@
 import { requireAuth } from "@/lib/auth-utils";
 import { db } from "@/lib/db";
 import { getAccessibleClientIds } from "@/lib/permissions";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { SiteHeader } from "@/components/site-header";
 import { Providers } from "@/components/providers";
-import { Separator } from "@/components/ui/separator";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await requireAuth();
 
   const clientIds = await getAccessibleClientIds(user.id, user.organizationId, user.role);
 
-  const clients = await db.client.findMany({
-    where: { id: { in: clientIds } },
-    select: { id: true, name: true, slug: true, color: true },
-    orderBy: { name: "asc" },
-  });
+  const [clients, userRow, organization] = await Promise.all([
+    db.client.findMany({
+      where: { id: { in: clientIds } },
+      select: { id: true, name: true, slug: true, color: true },
+      orderBy: { name: "asc" },
+    }),
+    db.user.findUnique({
+      where: { id: user.id },
+      select: { name: true, email: true, role: true, avatarUrl: true },
+    }),
+    db.organization.findUnique({
+      where: { id: user.organizationId },
+      select: { name: true, logoUrl: true },
+    }),
+  ]);
 
   return (
     <Providers>
       <SidebarProvider>
         <AppSidebar
-          user={{ name: user.name, email: user.email, role: user.role }}
+          user={{
+            name: userRow?.name ?? user.name,
+            email: userRow?.email ?? user.email,
+            role: userRow?.role ?? user.role,
+            avatarUrl: userRow?.avatarUrl ?? null,
+          }}
+          organization={{
+            name: organization?.name ?? "Social Hub",
+            logoUrl: organization?.logoUrl ?? null,
+          }}
           clients={clients}
         />
-        <SidebarInset>
-          <header className="flex h-14 items-center gap-2 border-b px-6">
-            <SidebarTrigger />
-            <Separator orientation="vertical" className="h-6" />
-          </header>
-          <main className="flex-1 p-6">{children}</main>
+        <SidebarInset className="min-h-0">
+          <SiteHeader />
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div className="@container/main flex min-h-0 flex-1 flex-col gap-2 p-4 md:gap-4 md:p-6">
+              {children}
+            </div>
+          </div>
         </SidebarInset>
       </SidebarProvider>
     </Providers>
