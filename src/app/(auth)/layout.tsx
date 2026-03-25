@@ -9,9 +9,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       style={{ background: authAppearance.pageBackground }}
     >
       <InteractiveDotGridBackground />
-      <div className="relative z-10 flex min-h-svh flex-col items-center justify-center px-4 pb-10 pt-8">
-        <div className="w-full max-w-md flex-1">{children}</div>
-        <footer className="mt-8 flex w-full max-w-md flex-wrap justify-center gap-x-4 gap-y-1 text-center text-xs text-white/50">
+      <div className="relative z-10 flex min-h-svh flex-col items-center px-4 pb-10 pt-8">
+        <div className="flex w-full flex-1 flex-col items-center justify-center">
+          <div className="w-full max-w-md">{children}</div>
+        </div>
+        <footer className="mt-auto flex w-full max-w-md shrink-0 flex-wrap justify-center gap-x-4 gap-y-1 pt-8 text-center text-xs text-white/50">
           <Link href="/privacy" className="hover:text-white/80 hover:underline">
             Privacy
           </Link>
