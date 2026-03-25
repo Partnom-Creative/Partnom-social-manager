@@ -114,7 +114,12 @@ This is **platform policy**; approval is not guaranteed by code alone.
 
 ## 8. Cron (scheduled publishing)
 
-[`vercel.json`](vercel.json) schedules `GET /api/cron/publish` every minute. Set **`CRON_SECRET`** in Vercel; the route must receive `Authorization: Bearer <CRON_SECRET>` (Vercel Cron should attach this if configured in your integration).
+[`vercel.json`](vercel.json) schedules `GET /api/cron/publish` **once per day** at 00:00 UTC (`0 0 * * *`). **Vercel Hobby** only allows cron expressions that run **at most once per day**; an every-minute schedule (`* * * * *`) is rejected on deploy.
+
+- **Hobby:** Keep the daily schedule, or remove the `crons` block and use an **external** cron (e.g. [cron-job.org](https://cron-job.org)) to `GET` your production URL `/api/cron/publish` with header `Authorization: Bearer <CRON_SECRET>` as often as you need.
+- **Pro:** You can change the schedule in `vercel.json` to run every minute (or another allowed cadence) for closer-to-time publishing.
+
+Set **`CRON_SECRET`** in Vercel either way; the route returns 401 without `Authorization: Bearer <CRON_SECRET>`.
 
 ---
 
