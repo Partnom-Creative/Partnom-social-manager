@@ -74,6 +74,7 @@ export function InteractiveDotGridBackground({
     let idleTimer: ReturnType<typeof setTimeout> | null = null;
 
     function resize() {
+      if (!canvasNode || !ctx) return;
       const dpr = Math.min(typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1, 2);
       const parent = canvasNode.parentElement;
       const w = parent?.clientWidth ?? 0;
@@ -87,6 +88,7 @@ export function InteractiveDotGridBackground({
     }
 
     function draw() {
+      if (!canvasNode || !ctx) return;
       const {
         spacing: sp,
         glowRadius: gr,
