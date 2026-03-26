@@ -17,8 +17,9 @@ export async function sendClientInviteEmail({
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "Social Hub <onboarding@resend.dev>",
+    const from = process.env.RESEND_FROM || "Social Hub <onboarding@resend.dev>";
+    const result = await resend.emails.send({
+      from,
       to,
       subject: `Connect your social media accounts for ${clientName}`,
       html: `
@@ -33,6 +34,9 @@ export async function sendClientInviteEmail({
           </div>
         `,
     });
+
+    // Resend frequently returns { error } instead of throwing.
+    if ((result as any)?.error) return { ok: false, error: (result as any).error };
     return { ok: true };
   } catch (e) {
     console.error("Failed to send invite email:", e);
