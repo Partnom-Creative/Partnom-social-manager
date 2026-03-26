@@ -9,29 +9,29 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubTrigger,
-  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
-import {
-  Loader2,
-  Mail,
-  MoreHorizontal,
-  Trash2,
-  ShieldCheck,
-  Pencil,
-} from "lucide-react";
+import { Loader2, Mail, MoreHorizontal, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import type { InviteStatus } from "@/generated/prisma/client";
+import {
+  MemberEditDrawer,
+  type AccessEntry,
+  type ClientOption,
+} from "./member-edit-drawer";
 
 type TeamRowActionsProps =
   | { variant: "invite"; inviteId: string; status: InviteStatus }
   | {
       variant: "member";
       memberId: string;
+      memberName: string;
+      memberEmail: string;
+      memberInitials: string;
       currentRole: "ADMIN" | "EDITOR" | "MEMBER";
       isSelf: boolean;
-      showManageAccess: boolean;
+      showClientAccess: boolean;
+      allClients: ClientOption[];
+      currentAccess: AccessEntry[];
     };
 
 export function TeamRowActions(props: TeamRowActionsProps) {
@@ -111,27 +111,19 @@ export function TeamRowActions(props: TeamRowActionsProps) {
     );
   }
 
-  const { memberId, currentRole, isSelf, showManageAccess } = props;
+  const {
+    memberId,
+    memberName,
+    memberEmail,
+    memberInitials,
+    currentRole,
+    isSelf,
+    showClientAccess,
+    allClients,
+    currentAccess,
+  } = props;
 
-  async function setRole(role: "ADMIN" | "EDITOR") {
-    setBusy(`role-${role}`);
-    try {
-      const res = await fetch(`/api/team/${memberId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok) {
-        toast.success("Role updated");
-        router.refresh();
-      } else {
-        toast.error(typeof data.error === "string" ? data.error : "Failed to update role");
-      }
-    } finally {
-      setBusy(null);
-    }
-  }
+  const [editOpen, setEditOpen] = useState(false);
 
   async function onDelete() {
     if (!confirm("Remove this team member? They will lose access to your organization.")) return;
@@ -150,67 +142,61 @@ export function TeamRowActions(props: TeamRowActionsProps) {
     }
   }
 
-  function scrollToAccess() {
-    const el = document.getElementById(`member-access-${memberId}`);
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
-            disabled={busy !== null}
-            aria-label="Member actions"
-          />
-        }
-      >
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground"
+              disabled={busy !== null}
+              aria-label="Member actions"
+            />
+          }
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreHorizontal className="h-4 w-4" />}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => {
+              // Base UI Menu.Item uses onClick, not Radix’s onSelect
+              setEditOpen(true);
+            }}
+          >
             <Pencil className="h-3.5 w-3.5" />
             Edit role
-          </DropdownMenuSubTrigger>
-          <DropdownMenuSubContent>
-            <DropdownMenuItem
-              disabled={currentRole === "ADMIN" || busy !== null}
-              onClick={() => void setRole("ADMIN")}
-            >
-              Admin
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              disabled={currentRole === "EDITOR" || busy !== null}
-              onClick={() => void setRole("EDITOR")}
-            >
-              Editor
-            </DropdownMenuItem>
-          </DropdownMenuSubContent>
-        </DropdownMenuSub>
-        {showManageAccess && (
-          <DropdownMenuItem onClick={scrollToAccess}>
-            <ShieldCheck className="h-3.5 w-3.5" />
-            Manage access
           </DropdownMenuItem>
-        )}
-        {!isSelf && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={() => void onDelete()}
-              disabled={busy !== null}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Remove
-            </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          {!isSelf && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => void onDelete()}
+                disabled={busy !== null}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Remove
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <MemberEditDrawer
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        memberId={memberId}
+        memberName={memberName}
+        memberEmail={memberEmail}
+        memberInitials={memberInitials}
+        currentRole={currentRole}
+        isSelf={isSelf}
+        showClientAccess={showClientAccess}
+        allClients={allClients}
+        currentAccess={currentAccess}
+      />
+    </>
   );
 }

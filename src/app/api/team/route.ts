@@ -54,9 +54,15 @@ export async function POST(req: Request) {
   }
 
   const inviteRole =
-    role === "ADMIN" ? UserRole.ADMIN : role === "EDITOR" ? UserRole.EDITOR : null;
+    role === "ADMIN"
+      ? UserRole.ADMIN
+      : role === "EDITOR"
+        ? UserRole.EDITOR
+        : role === "MEMBER"
+          ? UserRole.MEMBER
+          : null;
   if (!inviteRole) {
-    return NextResponse.json({ error: "Role must be ADMIN or EDITOR" }, { status: 400 });
+    return NextResponse.json({ error: "Role must be Admin, Manager, or Editor" }, { status: 400 });
   }
 
   const normalizedEmail = email.trim().toLowerCase();

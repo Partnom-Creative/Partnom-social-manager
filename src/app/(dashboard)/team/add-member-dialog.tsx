@@ -31,7 +31,7 @@ export function AddMemberDialog() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ email: "", role: "EDITOR" as "ADMIN" | "EDITOR" });
+  const [form, setForm] = useState({ email: "", role: "MEMBER" as "ADMIN" | "EDITOR" | "MEMBER" });
 
   async function onSubmit() {
     if (!form.email.trim()) return;
@@ -46,7 +46,7 @@ export function AddMemberDialog() {
     if (res.ok) {
       toast.success("Invitation sent — they can set their password from the email");
       setOpen(false);
-      setForm({ email: "", role: "EDITOR" });
+      setForm({ email: "", role: "MEMBER" });
       router.refresh();
     } else {
       const data = await res.json();
@@ -81,24 +81,40 @@ export function AddMemberDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label>Role</Label>
+            <Label className="normal-case">Role</Label>
             <Select
               value={form.role}
-              onValueChange={(v) => setForm((f) => ({ ...f, role: (v as "ADMIN" | "EDITOR") ?? "EDITOR" }))}
+              onValueChange={(v) =>
+                setForm((f) => ({
+                  ...f,
+                  role: (v as "ADMIN" | "EDITOR" | "MEMBER") ?? "MEMBER",
+                }))
+              }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full normal-case">
                 <SelectValue placeholder="Role">
                   {(value: string | null) => (value ? formatRoleLabel(value) : "Role")}
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 <SelectGroup>
-                  <SelectLabel>Role</SelectLabel>
-                  <SelectItem value="EDITOR">Editor</SelectItem>
-                  <SelectItem value="ADMIN">Admin</SelectItem>
+                  <SelectLabel className="normal-case">Role</SelectLabel>
+                  <SelectItem value="ADMIN" className="normal-case">
+                    Admin
+                  </SelectItem>
+                  <SelectItem value="EDITOR" className="normal-case">
+                    Manager
+                  </SelectItem>
+                  <SelectItem value="MEMBER" className="normal-case">
+                    Editor
+                  </SelectItem>
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <p className="text-xs leading-relaxed text-muted-foreground normal-case">
+              Admins have full org access. Managers lead assigned clients. Editors post only on assigned
+              clients.
+            </p>
           </div>
         </div>
         <DialogFooter>

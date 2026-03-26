@@ -12,9 +12,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ userId
   const { userId } = await params;
   const { role } = await req.json();
 
-  const nextRole = role === "ADMIN" ? UserRole.ADMIN : role === "EDITOR" ? UserRole.EDITOR : null;
+  const nextRole =
+    role === "ADMIN"
+      ? UserRole.ADMIN
+      : role === "EDITOR"
+        ? UserRole.EDITOR
+        : role === "MEMBER"
+          ? UserRole.MEMBER
+          : null;
   if (!nextRole) {
-    return NextResponse.json({ error: "Role must be ADMIN or EDITOR" }, { status: 400 });
+    return NextResponse.json({ error: "Role must be Admin, Manager, or Editor" }, { status: 400 });
   }
 
   if (userId === admin.id) {

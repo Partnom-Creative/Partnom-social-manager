@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { AddMemberDialog } from "./add-member-dialog";
-import { MemberAccessManager } from "./member-access-manager";
 import { TeamRowActions } from "./team-row-actions";
 import { StatusBadge } from "@/components/status-badge";
 import { format } from "date-fns";
@@ -140,28 +139,22 @@ export default async function TeamPage() {
                       <TeamRowActions
                         variant="member"
                         memberId={member.id}
+                        memberName={member.name || "Unnamed"}
+                        memberEmail={member.email}
+                        memberInitials={initials}
                         currentRole={member.role as "ADMIN" | "EDITOR" | "MEMBER"}
                         isSelf={member.id === user.id}
-                        showManageAccess={showAccess}
-                      />
-                    </div>
-                  </div>
-
-                  {showAccess && (
-                    <div id={`member-access-${member.id}`} className="min-w-0">
-                      <MemberAccessManager
-                        memberId={member.id}
-                        memberName={member.name || member.email}
+                        showClientAccess={showAccess}
+                        allClients={clients}
                         currentAccess={member.teamAccess.map((ta) => ({
                           clientId: ta.client.id,
                           clientName: ta.client.name,
                           clientColor: ta.client.color || "#6366f1",
                           accessLevel: ta.accessLevel,
                         }))}
-                        allClients={clients}
                       />
                     </div>
-                  )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
