@@ -6,6 +6,17 @@ import { getPublicBaseUrl } from "@/lib/public-base-url";
 import { sendTeamInviteEmail } from "@/lib/team-invite-email";
 import { InviteStatus, UserRole } from "@/generated/prisma/client";
 
+function errorToMessage(err: unknown) {
+  if (!err) return "Unknown error";
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
 export async function GET() {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -95,8 +106,14 @@ export async function POST(req: Request) {
 
   if (!sendResult.ok) {
     await db.teamInvite.delete({ where: { id: invite.id } });
+    const providerMessage = errorToMessage(sendResult.error);
     return NextResponse.json(
-      { error: "Could not send invite email. Check RESEND_API_KEY." },
+      {
+        error:
+          `Could not send invite email via Resend. ` +
+          `Check RESEND_API_KEY (and RESEND_FROM / verified domain). ` +
+          `Provider message: ${providerMessage}`,
+      },
       { status: 502 }
     );
   }

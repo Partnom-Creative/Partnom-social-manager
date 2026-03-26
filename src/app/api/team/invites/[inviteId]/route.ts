@@ -5,6 +5,17 @@ import { getPublicBaseUrl } from "@/lib/public-base-url";
 import { sendTeamInviteEmail } from "@/lib/team-invite-email";
 import { InviteStatus } from "@/generated/prisma/client";
 
+function errorToMessage(err: unknown) {
+  if (!err) return "Unknown error";
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  try {
+    return JSON.stringify(err);
+  } catch {
+    return String(err);
+  }
+}
+
 async function getOrgSession() {
   const session = await auth();
   if (!session?.user) return { error: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) };
@@ -51,8 +62,14 @@ export async function POST(_req: Request, { params }: { params: Promise<{ invite
     inviteUrl,
   });
   if (!sendResult.ok) {
+    const providerMessage = errorToMessage(sendResult.error);
     return NextResponse.json(
-      { error: "Could not send email. Check RESEND_API_KEY or try again later." },
+      {
+        error:
+          `Could not send email via Resend. ` +
+          `Check RESEND_API_KEY (and RESEND_FROM / verified domain). ` +
+          `Provider message: ${providerMessage}`,
+      },
       { status: 502 }
     );
   }
