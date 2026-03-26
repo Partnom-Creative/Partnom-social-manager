@@ -19,7 +19,8 @@ function errorToMessage(err: unknown) {
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if ((session.user as any).role !== "ADMIN" && (session.user as any).role !== "MEMBER") {
+  const user = session.user as { role?: string } | undefined;
+  if (user?.role !== "ADMIN" && user?.role !== "MEMBER") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
