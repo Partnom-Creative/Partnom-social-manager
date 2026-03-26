@@ -17,8 +17,9 @@ export async function sendTeamInviteEmail({
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
-    await resend.emails.send({
-      from: "Social Hub <onboarding@resend.dev>",
+    const from = process.env.RESEND_FROM || "Social Hub <onboarding@resend.dev>";
+    const result = await resend.emails.send({
+      from,
       to,
       subject: `You're invited to join ${organizationName} on Social Hub`,
       html: `
@@ -33,6 +34,7 @@ export async function sendTeamInviteEmail({
           </div>
         `,
     });
+    if ((result as any)?.error) return { ok: false, error: (result as any).error };
     return { ok: true };
   } catch (e) {
     console.error("Failed to send team invite email:", e);
