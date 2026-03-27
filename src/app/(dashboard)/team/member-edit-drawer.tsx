@@ -5,31 +5,18 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Drawer,
   DrawerClose,
   DrawerContent,
-  DrawerDescription,
   DrawerFooter,
-  DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ChevronDown, Info, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  formatAccessLevelLabel,
-  formatRoleLabel,
-  ORG_ROLE_DESCRIPTIONS,
-} from "@/lib/format-role";
+import { formatRoleLabel, ORG_ROLE_DESCRIPTIONS } from "@/lib/format-role";
 
 export type ClientOption = {
   id: string;
@@ -170,12 +157,7 @@ export function MemberEditDrawer({
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right" modal>
       <DrawerContent className="ml-auto flex h-full max-h-svh w-full max-w-md flex-col rounded-none border-l p-0 sm:max-w-md">
-        <DrawerHeader className="shrink-0 border-b">
-          <DrawerTitle>Team member</DrawerTitle>
-          <DrawerDescription>
-            Organization role and which clients this person can access.
-          </DrawerDescription>
-        </DrawerHeader>
+        <DrawerTitle className="sr-only">Edit team member</DrawerTitle>
 
         <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
           <div className="flex items-start gap-3">
@@ -194,38 +176,44 @@ export function MemberEditDrawer({
           {!isSelf && (
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Organization role</p>
-              <Select
-                value={currentRole}
-                disabled={roleBusy}
-                onValueChange={(v) => {
-                  if (v === "ADMIN" || v === "EDITOR" || v === "MEMBER") void setRole(v);
-                }}
-              >
-                <SelectTrigger className="w-full max-w-md normal-case">
-                  <SelectValue placeholder="Role">
-                    {(value: string | null) => (value ? formatRoleLabel(value) : "Role")}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectLabel className="normal-case">Role</SelectLabel>
-                    <SelectItem value="ADMIN" className="normal-case">
-                      Admin
-                    </SelectItem>
-                    <SelectItem value="EDITOR" className="normal-case">
-                      Manager
-                    </SelectItem>
-                    <SelectItem value="MEMBER" className="normal-case">
-                      Editor
-                    </SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-              <p className="text-xs leading-relaxed text-muted-foreground normal-case">{roleDescription}</p>
-              <p className="text-xs leading-relaxed text-muted-foreground normal-case">
-                Only org admins can invite new team members. Managers and editors are assigned to clients
-                below.
-              </p>
+              <div className="relative w-full max-w-md">
+                <select
+                  aria-label="Organization role"
+                  className={cn(
+                    "flex h-8 w-full cursor-pointer appearance-none rounded-lg border border-input bg-transparent py-1 pr-8 pl-2.5 text-sm text-foreground outline-none transition-colors",
+                    "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                    "disabled:cursor-not-allowed disabled:opacity-50",
+                    "dark:bg-input/30 dark:hover:bg-input/50"
+                  )}
+                  disabled={roleBusy}
+                  value={currentRole}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "ADMIN" || v === "EDITOR" || v === "MEMBER") void setRole(v);
+                  }}
+                >
+                  <option value="ADMIN">Admin</option>
+                  <option value="EDITOR">Manager</option>
+                  <option value="MEMBER">Editor</option>
+                </select>
+                <ChevronDown
+                  className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden
+                />
+              </div>
+              <Alert className="border-border/80 bg-muted/30">
+                <Info className="mt-0.5" aria-hidden />
+                <AlertDescription className="normal-case">
+                  <p>
+                    Only org admins can invite new team members. Managers and editors are assigned to
+                    clients below.
+                  </p>
+                  <p>
+                    {roleDescription}
+                    {!showClientAccess && currentRole === "ADMIN" ? " Per-client rules do not apply." : ""}
+                  </p>
+                </AlertDescription>
+              </Alert>
               {roleBusy && (
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -265,38 +253,29 @@ export function MemberEditDrawer({
                         <span className="min-w-0 flex-1 truncate text-sm font-medium normal-case">
                           {client.name}
                         </span>
-                        <Select
-                          value={value}
-                          disabled={busy}
-                          onValueChange={(v) => {
-                            if (v) onClientLevelChange(client.id, v);
-                          }}
-                        >
-                          <SelectTrigger className="h-9 w-[140px] shrink-0 text-xs normal-case">
-                            <SelectValue placeholder="Access">
-                              {(val: string | null) =>
-                                val && val !== "NONE" ? formatAccessLevelLabel(val) : "No access"
-                              }
-                            </SelectValue>
-                          </SelectTrigger>
-                          <SelectContent align="end">
-                            <SelectGroup>
-                              <SelectLabel className="normal-case">Access</SelectLabel>
-                              <SelectItem value="NONE" className="normal-case">
-                                No access
-                              </SelectItem>
-                              <SelectItem value="VIEW" className="normal-case">
-                                View
-                              </SelectItem>
-                              <SelectItem value="CREATE" className="normal-case">
-                                Create
-                              </SelectItem>
-                              <SelectItem value="MANAGE" className="normal-case">
-                                Manage
-                              </SelectItem>
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
+                        <div className="relative h-9 w-[140px] shrink-0">
+                          <select
+                            aria-label={`Access for ${client.name}`}
+                            className={cn(
+                              "flex h-9 w-full cursor-pointer appearance-none rounded-lg border border-input bg-transparent py-1 pr-7 pl-2 text-xs text-foreground outline-none transition-colors",
+                              "focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/50",
+                              "disabled:cursor-not-allowed disabled:opacity-50",
+                              "dark:bg-input/30"
+                            )}
+                            disabled={busy}
+                            value={value}
+                            onChange={(e) => onClientLevelChange(client.id, e.target.value)}
+                          >
+                            <option value="NONE">No access</option>
+                            <option value="VIEW">View</option>
+                            <option value="CREATE">Create</option>
+                            <option value="MANAGE">Manage</option>
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-1.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
+                            aria-hidden
+                          />
+                        </div>
                         {busy && <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />}
                       </li>
                     );
@@ -306,11 +285,6 @@ export function MemberEditDrawer({
             </div>
           )}
 
-          {!showClientAccess && currentRole === "ADMIN" && (
-            <p className="text-sm text-muted-foreground normal-case">
-              {ORG_ROLE_DESCRIPTIONS.ADMIN} Per-client rules do not apply.
-            </p>
-          )}
         </div>
 
         <DrawerFooter className="shrink-0 border-t bg-background">

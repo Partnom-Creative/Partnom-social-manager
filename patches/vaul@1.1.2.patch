@@ -1,0 +1,16 @@
+diff --git a/dist/index.js b/dist/index.js
+index 7f343be1fafe1cf302ee6afc7268c29490895e34..931da8ba4e9310ff048fcde88ed675a7e0fed754 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -1516,6 +1516,11 @@ const Content = /*#__PURE__*/ React__namespace.default.forwardRef(function({ onP
+                 e.preventDefault();
+                 return;
+             }
++            const rt = e.relatedTarget;
++            if (rt && typeof rt.closest === 'function' && rt.closest('[data-slot="select-content"]')) {
++                e.preventDefault();
++                return;
++            }
+         },
+         onPointerMove: (event)=>{
+             lastKnownPointerEventRef.current = event;

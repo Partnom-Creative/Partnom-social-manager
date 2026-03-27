@@ -38,7 +38,7 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, onPointerDownOutside, ...props }, ref) => (
   <DrawerPortal>
     <DrawerOverlay />
     <DrawerPrimitive.Content
@@ -51,6 +51,18 @@ const DrawerContent = React.forwardRef<
         className
       )}
       {...props}
+      onPointerDownOutside={(e) => {
+        const target = e.target;
+        if (
+          target instanceof Element &&
+          target.closest(
+            '[data-slot="select-content"],[data-slot="select-item"],[data-slot="select-scroll-up-button"],[data-slot="select-scroll-down-button"]'
+          )
+        ) {
+          e.preventDefault();
+        }
+        onPointerDownOutside?.(e);
+      }}
     >
       {children}
     </DrawerPrimitive.Content>

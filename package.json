@@ -19,7 +19,10 @@
       "prisma",
       "esbuild",
       "msw"
-    ]
+    ],
+    "patchedDependencies": {
+      "vaul@1.1.2": "patches/vaul@1.1.2.patch"
+    }
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
