@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -177,22 +178,62 @@ export function MemberEditDrawer({
           ref={setDrawerPortalEl}
           className="relative flex min-h-0 min-w-0 flex-1 flex-col"
         >
-        <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 py-4">
-          <div className="flex items-start gap-3">
-            <Avatar className="h-14 w-14 shrink-0 rounded-xl border-0 shadow-none ring-0 [&]:after:hidden">
-              <AvatarFallback className="rounded-xl text-base font-medium">{memberInitials}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="truncate text-base font-semibold leading-tight">{memberName}</p>
-              <p className="truncate text-sm text-muted-foreground">{memberEmail}</p>
-              <Badge variant="secondary" className="text-xs font-normal normal-case">
-                {formatRoleLabel(currentRole)}
-              </Badge>
+        <div className="no-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto">
+          <div className="shrink-0 bg-background">
+            {/* Banner + avatar centered on bottom edge of cover (half on art, half below) */}
+            <div className="relative">
+              <div className="relative w-full overflow-hidden bg-muted">
+                <Image
+                  src="/images/member-drawer-cover.png"
+                  alt=""
+                  width={1200}
+                  height={400}
+                  priority
+                  className="block h-28 w-full object-cover object-center sm:h-32"
+                  sizes="448px"
+                />
+              </div>
+              <div className="absolute bottom-0 left-4 z-10 translate-y-1/2">
+                <Avatar className="h-20 w-20 rounded-full border-4 border-background shadow-sm ring-0 [&]:after:hidden">
+                  <AvatarFallback className="rounded-full text-lg font-medium">{memberInitials}</AvatarFallback>
+                </Avatar>
+              </div>
+            </div>
+            {/* Name + badge + email below the banner (under avatar); pt clears the avatar’s lower half */}
+            <div className="flex flex-col gap-[2px] px-4 pb-4 pt-11">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                <p className="truncate text-lg font-semibold leading-tight tracking-tight">{memberName}</p>
+                <Badge
+                  variant="outline"
+                  className="shrink-0 border-border/80 bg-background text-xs font-normal leading-none normal-case"
+                >
+                  {formatRoleLabel(currentRole)}
+                </Badge>
+              </div>
+              <p className="truncate text-sm leading-tight text-muted-foreground">{memberEmail}</p>
             </div>
           </div>
 
+          <div className="flex flex-col gap-3 px-4 pb-4 pt-0">
+
           {!isSelf && (
-            <div className="space-y-2">
+            <Alert variant="info">
+              <Info className="mt-0.5" aria-hidden />
+              <AlertDescription className="normal-case">
+                <p>
+                  Only org admins can invite new team members. Managers and editors are assigned to
+                  clients below.
+                </p>
+                <p>
+                  {roleDescription}
+                  {!showClientAccess && currentRole === "ADMIN" ? " Per-client rules do not apply." : ""}
+                </p>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {!isSelf && (
+            <div className="space-y-1.5">
               <p className="text-sm font-medium text-muted-foreground">Organization role</p>
               <Select
                 modal={false}
@@ -227,19 +268,6 @@ export function MemberEditDrawer({
                   </SelectGroup>
                 </SelectContent>
               </Select>
-              <Alert className="border-border/80 bg-muted/30">
-                <Info className="mt-0.5" aria-hidden />
-                <AlertDescription className="normal-case">
-                  <p>
-                    Only org admins can invite new team members. Managers and editors are assigned to
-                    clients below.
-                  </p>
-                  <p>
-                    {roleDescription}
-                    {!showClientAccess && currentRole === "ADMIN" ? " Per-client rules do not apply." : ""}
-                  </p>
-                </AlertDescription>
-              </Alert>
               {roleBusy && (
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -256,12 +284,12 @@ export function MemberEditDrawer({
           )}
 
           {showClientAccess && (
-            <div className="space-y-3">
+            <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">Client access</p>
               {allClients.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No clients in this organization yet.</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {allClients.map((client) => {
                     const color = client.color || "#6366f1";
                     const value = localAccess.get(client.id) ?? "NONE";
@@ -269,7 +297,7 @@ export function MemberEditDrawer({
                     return (
                       <li
                         key={client.id}
-                        className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/30 px-3 py-2.5"
+                        className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/30 px-3 py-2"
                       >
                         <div
                           className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -327,6 +355,7 @@ export function MemberEditDrawer({
             </div>
           )}
 
+          </div>
         </div>
         </div>
 

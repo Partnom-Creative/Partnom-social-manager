@@ -4,6 +4,11 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  /** Static assets under /public (e.g. /images/*) must bypass auth so <img> / next/image requests always succeed */
+  if (pathname.startsWith("/images/")) {
+    return NextResponse.next();
+  }
+
   const publicPaths = [
     "/login",
     "/register",

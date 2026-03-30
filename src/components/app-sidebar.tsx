@@ -14,7 +14,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar";
 import {
@@ -90,7 +89,7 @@ export function AppSidebar({
   const orgInitials = twoLetterInitials(organization.name);
 
   return (
-    <Sidebar variant="inset" collapsible="icon">
+    <Sidebar variant="inset" collapsible="offcanvas">
       {/* pl-4 = group p-2 (8px) + menu button p-2 (8px) so logo lines up with nav icons */}
       <SidebarHeader className="gap-2 py-4 pl-4 pr-2">
         <SidebarMenu>
@@ -98,7 +97,6 @@ export function AppSidebar({
             <SidebarMenuButton
               render={<Link href="/" />}
               size="lg"
-              tooltip={organization.name}
               className="gap-3 px-0 py-0 hover:bg-transparent hover:text-sidebar-foreground active:bg-transparent data-active:bg-transparent data-active:font-semibold"
             >
               <Avatar className="h-8 w-8 shrink-0 rounded-lg">
@@ -113,9 +111,7 @@ export function AppSidebar({
                   {orgInitials}
                 </AvatarFallback>
               </Avatar>
-              <span className="font-semibold text-lg truncate group-data-[collapsible=icon]:hidden">
-                {organization.name}
-              </span>
+              <span className="font-semibold text-lg truncate">{organization.name}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -131,7 +127,6 @@ export function AppSidebar({
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
                     isActive={pathname === item.href}
-                    tooltip={item.title}
                   >
                     <item.icon />
                     <span>{item.title}</span>
@@ -154,7 +149,6 @@ export function AppSidebar({
                       <SidebarMenuButton
                         render={<Link href={`/clients/${client.slug}`} />}
                         isActive={pathname.startsWith(`/clients/${client.slug}`)}
-                        tooltip={client.name}
                       >
                         <div
                           className="h-3 w-3 rounded-full shrink-0"
@@ -182,7 +176,6 @@ export function AppSidebar({
                       <SidebarMenuButton
                         render={<Link href={item.href} />}
                         isActive={pathname === item.href}
-                        tooltip={item.title}
                       >
                         <item.icon />
                         <span>{item.title}</span>
@@ -204,7 +197,6 @@ export function AppSidebar({
                 render={
                   <SidebarMenuButton
                     size="lg"
-                    tooltip={displayName}
                     className="data-[popup-open]:bg-sidebar-accent data-[popup-open]:text-sidebar-accent-foreground"
                   />
                 }
@@ -219,11 +211,11 @@ export function AppSidebar({
                   ) : null}
                   <AvatarFallback className="rounded-lg text-xs">{userInitials}</AvatarFallback>
                 </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{displayName}</span>
                   <span className="truncate text-xs text-sidebar-foreground/70">{user.email}</span>
                 </div>
-                <MoreVertical className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+                <MoreVertical className="ml-auto size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-(--anchor-width) min-w-56 rounded-lg"
@@ -275,7 +267,6 @@ export function AppSidebar({
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 }

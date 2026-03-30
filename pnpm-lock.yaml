@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 patchedDependencies:
+  next-themes@0.4.6:
+    hash: 15ccb565a106671e250c8de0e62e8935d554fe6bd510b0e380cb9ab030ae68a7
+    path: patches/next-themes@0.4.6.patch
   vaul@1.1.2:
     hash: 275289d445921c02b9ade61be03b5ddc6bffbe9a7565cf9388284706afb3fb08
     path: patches/vaul@1.1.2.patch
@@ -54,7 +57,7 @@ importers:
         version: 5.0.0-beta.30(next@16.2.1(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
       next-themes:
         specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        version: 0.4.6(patch_hash=15ccb565a106671e250c8de0e62e8935d554fe6bd510b0e380cb9ab030ae68a7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       pg:
         specifier: ^8.20.0
         version: 8.20.0
@@ -6779,7 +6782,7 @@ snapshots:
       next: 16.2.1(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
 
-  next-themes@0.4.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  next-themes@0.4.6(patch_hash=15ccb565a106671e250c8de0e62e8935d554fe6bd510b0e380cb9ab030ae68a7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
