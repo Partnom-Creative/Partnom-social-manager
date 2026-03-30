@@ -23,13 +23,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Info, Loader2 } from "lucide-react";
+import { Info, Loader2, X } from "lucide-react";
 import { toast } from "sonner";
 import {
   formatAccessLevelLabel,
   formatRoleLabel,
   ORG_ROLE_DESCRIPTIONS,
 } from "@/lib/format-role";
+
+/** Session-only: bump version to reset “dismissed” for everyone (e.g. after testing). */
+const MEMBER_ROLE_INFO_DISMISSED_KEY = "social-hub:member-role-info-dismissed-v2";
 
 export type ClientOption = {
   id: string;
@@ -77,6 +80,17 @@ export function MemberEditDrawer({
   const [drawerPortalEl, setDrawerPortalEl] = useState<HTMLDivElement | null>(null);
   const [roleBusy, setRoleBusy] = useState(false);
   const [clientLoading, setClientLoading] = useState<string | null>(null);
+  const [roleInfoDismissed, setRoleInfoDismissed] = useState(false);
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem(MEMBER_ROLE_INFO_DISMISSED_KEY) === "1") {
+        setRoleInfoDismissed(true);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
 
   const accessMap = useMemo(() => {
     const m = new Map<string, string>();
@@ -169,6 +183,15 @@ export function MemberEditDrawer({
         ? ORG_ROLE_DESCRIPTIONS.EDITOR
         : ORG_ROLE_DESCRIPTIONS.MEMBER;
 
+  function dismissRoleInfo() {
+    setRoleInfoDismissed(true);
+    try {
+      sessionStorage.setItem(MEMBER_ROLE_INFO_DISMISSED_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange} direction="right" modal>
       <DrawerContent className="ml-auto flex h-full max-h-svh w-full max-w-md flex-col rounded-none border-l p-0 sm:max-w-md">
@@ -216,20 +239,32 @@ export function MemberEditDrawer({
 
           <div className="flex flex-col gap-3 px-4 pb-4 pt-0">
 
-          {!isSelf && (
-            <Alert variant="info">
-              <Info className="mt-0.5" aria-hidden />
-              <AlertDescription className="normal-case">
-                <p>
-                  Only org admins can invite new team members. Managers and editors are assigned to
-                  clients below.
-                </p>
-                <p>
-                  {roleDescription}
-                  {!showClientAccess && currentRole === "ADMIN" ? " Per-client rules do not apply." : ""}
-                </p>
-              </AlertDescription>
-            </Alert>
+          {!isSelf && !roleInfoDismissed && (
+            <div className="relative">
+              <Alert variant="info" className="pr-10">
+                <Info className="mt-0.5" aria-hidden />
+                <AlertDescription className="normal-case">
+                  <p>
+                    Only org admins can invite new team members. Managers and editors are assigned to
+                    clients below.
+                  </p>
+                  <p>
+                    {roleDescription}
+                    {!showClientAccess && currentRole === "ADMIN" ? " Per-client rules do not apply." : ""}
+                  </p>
+                </AlertDescription>
+              </Alert>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1 h-8 w-8 shrink-0 text-[#434F70]/70 hover:bg-[#D8E1FC] hover:text-[#434F70]"
+                onClick={dismissRoleInfo}
+                aria-label="Dismiss"
+              >
+                <X className="size-4" />
+              </Button>
+            </div>
           )}
 
           {!isSelf && (

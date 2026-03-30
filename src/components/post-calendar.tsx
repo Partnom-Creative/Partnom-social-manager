@@ -62,7 +62,7 @@ function PillShell({
     <span
       className={cn(
         "flex min-w-0 max-w-full items-center gap-1.5 rounded-full px-2 py-0.5",
-        "bg-[#2d1b33]/90 ring-1 ring-purple-950/50",
+        "bg-purple-500/12 ring-1 ring-purple-500/25 dark:bg-[#2d1b33]/90 dark:ring-purple-950/50",
         className
       )}
     >
@@ -85,14 +85,14 @@ function ScheduledPostPill({
       onMouseDown={(e) => e.stopPropagation()}
       className={cn(
         "flex min-w-0 max-w-full items-center gap-1.5 rounded-full px-2 py-0.5 transition-opacity hover:opacity-90",
-        "bg-[#2d1b33]/90 ring-1 ring-purple-950/50",
+        "bg-purple-500/12 ring-1 ring-purple-500/25 dark:bg-[#2d1b33]/90 dark:ring-purple-950/50",
         className
       )}
     >
-      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-purple-400">
-        <Star className="size-2.5 fill-zinc-950 text-zinc-950" strokeWidth={0} />
+      <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-purple-300 dark:bg-purple-400">
+        <Star className="size-2.5 fill-purple-900 text-purple-900 dark:fill-zinc-950 dark:text-zinc-950" strokeWidth={0} />
       </span>
-      <span className="truncate text-[10px] font-medium leading-tight text-purple-200">
+      <span className="truncate text-[10px] font-medium leading-tight text-purple-900 dark:text-purple-200">
         {postTitlePreview(post.content)}
       </span>
     </Link>
@@ -148,7 +148,7 @@ export function PostCalendar({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-t-none rounded-b-2xl bg-zinc-950 p-4 text-zinc-100 ring-1 ring-zinc-800 md:p-5",
+        "flex flex-col rounded-t-none rounded-b-2xl bg-card p-4 text-card-foreground ring-1 ring-border md:p-5",
         fillHeight && "min-h-0 flex-1",
         className
       )}
@@ -160,7 +160,7 @@ export function PostCalendar({
         )}
       >
         <div className="flex shrink-0 items-center justify-between">
-          <h3 className="m-0 text-base font-medium leading-tight tracking-tight text-zinc-100">
+          <h3 className="m-0 text-base font-medium leading-tight tracking-tight text-foreground">
             {format(currentMonth, "MMMM yyyy")}
           </h3>
           <div className="flex items-center gap-0.5">
@@ -168,7 +168,7 @@ export function PostCalendar({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-8 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              className="size-8 text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             >
               <ChevronLeft className="size-4" />
@@ -177,7 +177,7 @@ export function PostCalendar({
               type="button"
               variant="ghost"
               size="sm"
-              className="h-8 px-2.5 text-xs text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              className="h-8 px-2.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setCurrentMonth(new Date())}
             >
               Today
@@ -186,7 +186,7 @@ export function PostCalendar({
               type="button"
               variant="ghost"
               size="icon"
-              className="size-8 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
+              className="size-8 text-muted-foreground hover:bg-muted hover:text-foreground"
               onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             >
               <ChevronRight className="size-4" />
@@ -200,14 +200,14 @@ export function PostCalendar({
             fillHeight && "min-h-0 flex-1"
           )}
         >
-          <div className="grid grid-cols-7 border-b border-zinc-800 pb-2">
+          <div className="grid grid-cols-7 border-b border-border pb-2">
             {weekLetters.map((letter, i) => (
               <div key={`${letter}-${i}`} className="px-1 py-1.5">
                 <div className="flex shrink-0 items-center gap-1.5 self-start">
                   <span
                     className={cn(
                       "flex size-7 shrink-0 items-center justify-center rounded-lg text-xs font-medium tabular-nums",
-                      i === 6 ? "text-sky-400" : "text-zinc-500"
+                      i === 6 ? "text-sky-600 dark:text-sky-400" : "text-muted-foreground"
                     )}
                   >
                     {letter}
@@ -250,9 +250,9 @@ export function PostCalendar({
                   : fillHeight
                     ? "min-h-0 justify-start pb-1.5 pt-1"
                     : "min-h-[48px] justify-start pb-1.5 pt-1",
-                "hover:bg-zinc-900/80",
+                "hover:bg-muted/80",
                 !inMonth && "opacity-35",
-                isSelected && "ring-1 ring-sky-500/40 ring-inset"
+                isSelected && "ring-1 ring-sky-500/40 ring-inset dark:ring-sky-400/35"
               )}
             >
               <div className="flex shrink-0 items-center gap-1.5 self-start">
@@ -260,19 +260,19 @@ export function PostCalendar({
                   className={cn(
                     "flex size-7 shrink-0 items-center justify-center rounded-lg text-xs tabular-nums",
                     today &&
-                      "bg-[#90caf9] font-medium text-zinc-500 shadow-none",
-                    !today && inMonth && "text-zinc-200",
-                    !today && !inMonth && "text-zinc-600",
+                      "bg-sky-400/35 font-medium text-sky-950 shadow-none dark:bg-sky-400/45 dark:text-sky-950",
+                    !today && inMonth && "text-foreground",
+                    !today && !inMonth && "text-muted-foreground",
                     isSelected &&
                       !today &&
-                      "ring-1 ring-sky-400/60 ring-offset-2 ring-offset-zinc-950"
+                      "ring-1 ring-sky-500/55 ring-offset-2 ring-offset-background dark:ring-sky-400/50"
                   )}
                 >
                   {format(day, "d")}
                 </span>
                 {showPills && (
                   <span
-                    className="size-1.5 shrink-0 rounded-full bg-teal-400"
+                    className="size-1.5 shrink-0 rounded-full bg-teal-600 dark:bg-teal-400"
                     aria-hidden
                   />
                 )}
@@ -284,7 +284,7 @@ export function PostCalendar({
                     <ScheduledPostPill key={post.id} post={post} />
                   ))}
                   {overflow > 0 && (
-                    <span className="text-left text-[10px] text-zinc-500">
+                    <span className="text-left text-[10px] text-muted-foreground">
                       +{overflow} more
                     </span>
                   )}
@@ -298,16 +298,16 @@ export function PostCalendar({
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="border-zinc-800 bg-zinc-950 text-zinc-100">
+        <DialogContent className="border-border bg-background text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-zinc-100">
+            <DialogTitle className="text-foreground">
               {selectedDate
                 ? format(selectedDate, "EEEE, MMMM d, yyyy")
                 : ""}
             </DialogTitle>
           </DialogHeader>
           {selectedDayPosts.length === 0 ? (
-            <p className="py-6 text-center text-sm text-zinc-500">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               No posts scheduled for this day.
             </p>
           ) : (
@@ -316,21 +316,21 @@ export function PostCalendar({
                 <Link
                   key={post.id}
                   href={`/posts/${post.id}`}
-                  className="block rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 transition-colors hover:border-purple-900/60 hover:bg-zinc-900"
+                  className="block rounded-xl border border-border bg-muted/40 p-3 transition-colors hover:border-purple-500/35 hover:bg-muted dark:hover:border-purple-900/60 dark:hover:bg-muted/80"
                 >
                   <PillShell className="mb-3 w-full">
-                    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-purple-400">
-                      <Star className="size-2.5 fill-zinc-950 text-zinc-950" strokeWidth={0} />
+                    <span className="flex size-4 shrink-0 items-center justify-center rounded-full bg-purple-300 dark:bg-purple-400">
+                      <Star className="size-2.5 fill-purple-900 text-purple-900 dark:fill-zinc-950 dark:text-zinc-950" strokeWidth={0} />
                     </span>
-                    <span className="truncate text-[10px] font-medium leading-tight text-purple-200">
+                    <span className="truncate text-[10px] font-medium leading-tight text-purple-900 dark:text-purple-200">
                       {postTitlePreview(post.content, 40)}
                     </span>
                   </PillShell>
-                  <p className="text-sm leading-snug text-zinc-300 line-clamp-3">
+                  <p className="text-sm leading-snug text-foreground/90 line-clamp-3">
                     {post.content}
                   </p>
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-muted-foreground">
                       {post.client.name}
                     </span>
                     <StatusBadge
@@ -338,7 +338,7 @@ export function PostCalendar({
                       className="text-[10px]"
                     />
                     {post.scheduledAt && (
-                      <span className="text-xs text-zinc-500">
+                      <span className="text-xs text-muted-foreground">
                         {format(new Date(post.scheduledAt), "h:mm a")}
                       </span>
                     )}
